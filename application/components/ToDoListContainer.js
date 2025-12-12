@@ -1,79 +1,66 @@
-import styles from '../styles/styles'
+
+import React, { useState } from 'react';
+import { Text, View, TouchableHighlight, Alert } from 'react-native';
+import styles from '../styles/styles';
 import ToDoList from './ToDoList';
-import ToDoEdit from './ToDoEdit';
-import React from 'react';
-import { Text, View, ListView, TouchableHighlight, AlertIOS } from 'react-native';
 
-class ToDoContainer extends React.Component {
-    constructor() {
-        super();
-        this.state = {
-            items: [
-                {txt: 'Learn react native', complete: false},
-                {txt: 'Make a to-do app', complete: true}
-            ]
-        };
-        this.alertMenu = this.alertMenu.bind(this);
-        this.deleteItem = this.deleteItem.bind(this);
-        this.updateItem = this.updateItem.bind(this);
-        this.openItem = this.openItem.bind(this);
+const ToDoContainer = ({ navigation }) => {
+    const [items, setItems] = useState([
+        {txt: 'Learn react native', complete: false},
+        {txt: 'Make a to-do app', complete: true}
+    ]);
 
-    }
+    const deleteItem = (index) => {
+        const newItems = [...items];
+        newItems.splice(index, 1);
+        setItems(newItems);
+    };
 
-    alertMenu(rowData, rowID) {
-        AlertIOS.alert(
+    const updateItem = (item, index) => {
+        const newItems = [...items];
+        if (typeof index !== 'undefined' && index !== null) {
+            newItems[index] = item;
+        }
+        else {
+            newItems.push(item);
+        }
+        setItems(newItems);
+    };
+
+    const openItem = (rowData, rowID) => {
+        navigation.navigate('Edit', {
+            item: rowData,
+            id: rowID,
+            update: updateItem
+        });
+    };
+
+    const alertMenu = (rowData, rowID) => {
+        Alert.alert(
             'Quick Menu',
             null,
             [
-                {text: 'Delete', onPress: () => this.deleteItem(rowID)},
-                {text: 'Edit', onPress: () => this.openItem(rowData, rowID)},
-                {text: 'Cancel'}
+                {text: 'Delete', onPress: () => deleteItem(rowID)},
+                {text: 'Edit', onPress: () => openItem(rowData, rowID)},
+                {text: 'Cancel', style: 'cancel'}
             ]
-        )
-    }
-
-    deleteItem(index) {
-        var items = this.state.items;
-        items.splice(index, 1);
-        this.setState({items: items})
-    }
-
-    updateItem(item, index) {
-        var items = this.state.items;
-        if (index) {
-            items[index] = item;
-        }
-        else {
-            items.push(item)
-        }
-        this.setState({items: items});
-        this.props.navigator.pop();
-    }
-
-    openItem(rowData, rowID) {
-        this.props.navigator.push({
-            title: rowData && rowData.txt || 'New Item',
-            component: ToDoEdit,
-            passProps: {item: rowData, id: rowID, update: this.updateItem}
-        });
-    }
-
-    render() {
-        return (
-            <View style={{flex:1}}>
-                <ToDoList
-                    items={this.state.items}
-                    onPressItem={this.openItem}
-                    onLongPressItem={this.alertMenu}/>
-                <TouchableHighlight
-                    style={[styles.button, styles.newButton]}
-                    underlayColor='#99d9f4'
-                    onPress={this.openItem}>
-                    <Text style={styles.buttonText}>+</Text>
-                </TouchableHighlight>
-            </View>
         );
-    }
-}
+    };
 
-module.exports = ToDoContainer;
+    return (
+        <View style={{flex:1, backgroundColor: 'white'}}>
+            <ToDoList
+                items={items}
+                onPressItem={openItem}
+                onLongPressItem={alertMenu}/>
+            <TouchableHighlight
+                style={[styles.button, styles.newButton]}
+                underlayColor='#99d9f4'
+                onPress={() => openItem(null, null)}>
+                <Text style={styles.buttonText}>+</Text>
+            </TouchableHighlight>
+        </View>
+    );
+};
+
+export default ToDoContainer;
